@@ -137,3 +137,40 @@ def delete_coin_from_wallet(wallet_id):
     return jsonify({'id': wallet_coin.id, 'name': wallet_coin.name, 'balance': wallet_coin.balance, 'coins': wallet_coin.coins, 'created_at': wallet_coin.created_at, 'updated_at': wallet_coin.updated_at}), 200
 
 
+@app.route('/coins/<int:coin_id>', methods=['PUT'])
+def edit_coin(coin_id):
+
+    coin = Coin.query.filter_by(id=coin_id).first()
+    if not coin:
+        return jsonify({'error': "not found"}), 404
+    name = request.form.get('name')
+    symbol = request.form.get('symbol')
+    price = request.form.get('price')
+    if not name:
+        return jsonify({'error': "no name provided"}), 400
+    if not symbol:
+        return jsonify({'error': "no symbol provided"}), 400
+    if not price:
+        return jsonify({'error': "no price provided"}), 400
+    coin = Coin.query.filter_by(name=name).first()
+    if coin:
+        return jsonify({'error': "a coin with the given name already exists"}), 400
+    coin = Coin.query.filter_by(symbol=symbol).first()
+    if coin:
+        return jsonify({'error': "a coin with the given symbol already exists"}), 400
+    coin.name = name
+    coin.symbol = symbol
+    coin.price = price
+    coin.updated_at = datetime.now()
+    db.session.commit()
+    return jsonify({'id': coin.id, 'name': coin.name, 'symbol': coin.symbol, 'price': coin.price, 'created_at': coin.created_at, 'updated_at': coin.updated_at}), 200
+
+
+@app.route('/coins/<int:coin_id>', methods=['DELETE'])
+def delete_coin(coin_id):
+    coin = Coin.query.filter_by(id=coin_id).first()
+    if not coin:
+        return jsonify({'error': "not found"}), 404
+    db.session.delete(coin)
+    db.session.commit()
+    return jsonify({'id': coin.id, 'name': coin.name, 'symbol': coin.symbol, 'price': coin.price, 'created_at': coin.created_at, 'updated_at': coin.updated_at}), 200
